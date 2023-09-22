@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>AXL API Test</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <style>
+            .content {
+                visibility: hidden;
+                opacity: 0;
+                transition: visibility 0.5s, opacity 0.5s ease;
+            }
+        </style>
+    </head>
+    <body class="content">
+        <div style="width: 1000px; margin: 0 auto;">
+        <div class="m-5 max-w-full">
+            <h1 class="text-4xl font-bold py-4">AXL API Example - Get Application User List</h1>
+            <button class="text-white bg-blue-700 hover:bg-blue-600 
+        font-medium rounded text-sm px-5 py-2.5 text-center flex" id="getAppUser">Refresh</button>
+        
+            <section class="py-4" id="apiResultSection" style="display: none;">
+                <h3 class="text-3xl font-medium">Application User List</h3>
+                <div id="my-table"></div>
+            </section>
+            <section id="jsonResult" class="py-4" style="display: none;">
+                <h2 class="text-3xl font-medium">JSON Output</h2>
+                <pre id="result" class="mt-2 bg-slate-800 px-4 py-2 rounded-md text-gray-200" ></pre>
+            </section>
+        </div>
+    </div>
+
+        <script>
+
+            function fetchAppUserData () {
+                return fetch(window.origin + "/appUser").then(data => {
+                    return data.json()
+                })
+                .then((data) => {
+
+                    return data.sort((a,b) => {
+                        return a['userid'].localeCompare(b['userid'], 'en')
+                    })
+
+                })
+                .then(function (data) {
+                    document.getElementById("result").innerText = JSON.stringify(data, null, 4)
+                    document.getElementById("my-table").innerHTML = ""
+
+                    const table = document.createElement("table")
+                    table.className = "table-auto border-collapse w-full text-2xl rounded-md"
+
+                    const head = document.createElement("thead")
+                    head.className = "border-b font-medium dark:border-neutral-500"
+
+                    const body = document.createElement("tbody")
+                    const tr = document.createElement("tr")
+                    let th1 = document.createElement("th")
+                    th1.innerText = "User ID"
+                    th1.className = "px-6 py-2"
+                    let th2 = document.createElement("th")
+                    th2.innerText=  "Presence Group Name"
+                    th2.className = "px-6 py-2 text-center"
+                    let th3 = document.createElement("th")
+                    th3.innerText = "Standard User"
+                    th3.className = "px-6 py-2 text-center"
+                    tr.appendChild(th1)
+                    tr.appendChild(th2)
+                    tr.appendChild(th3)
+
+                    let row = 0
+                    for (const user of data) {
+                        row++;
+                        let userTr = document.createElement('tr')
+                        userTr.className = "border-b dark:border-neutral-500"
+                        if (row % 2 === 1){
+                            userTr.className =" bg-gray-100"
+                        }
+                        let userTd1 = document.createElement('td')
+                        userTd1.className = "px-6 py-2"
+                        let userTd2 = document.createElement('td')
+                        userTd2.className = "px-6 py-2 text-center"
+                        let userTd3 = document.createElement('td')
+                        userTd3.className = "px-6 py-2 text-center"
+
+                        userTd1.innerText = user['userid']
+                        userTd2.innerText = user['presenceGroupName']
+                        userTd3.innerText = user["isStandard"] === "true" ? "✅" : "❎"
+                        if (user["isStandard"] !== "true") {
+                            userTr.classList.remove("bg-gray-100")
+                            userTr.classList.add("bg-red-300")
+                            userTr.classList.add("hover:bg-red-600")
+                        } else {
+                            userTr.classList.add("hover:bg-gray-300")
+                        }
+                        
+
+                        userTr.appendChild(userTd1)
+                        userTr.appendChild(userTd2)
+                        userTr.appendChild(userTd3)
+                        body.appendChild(userTr)
+                    }
+
+                    head.appendChild(tr)
+
+                    table.appendChild(head)
+                    table.appendChild(body)
+
+                    document.getElementById("my-table").append(table)
+
+
+                    document.getElementById("apiResultSection").style.removeProperty("display")
+                    document.getElementById("jsonResult").style.removeProperty("display")
+                })
+            }
+
+            document.getElementById("getAppUser").addEventListener('click', function() {                
+                fetchAppUserData()
+            })
+            
+            fetchAppUserData().then(() => {
+                setTimeout(() => {
+                    document.querySelector(".content").style.visibility = "visible"
+                    document.querySelector(".content").style.opacity = "1"
+                }, 200)
+                
+            })
+        </script>
+    </body>
+</html>
